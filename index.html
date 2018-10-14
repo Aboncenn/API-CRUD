@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="fr">
+
+<head>
+  <meta charset="utf-8">
+  <title>EPSI</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
+  integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+  crossorigin=""/>
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js" integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA==" crossorigin=""></script>
+  <style type="text/css">
+    #carte {
+      min-height: 90vh;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="body">
+    <h1>Hopitaux de Grenoble</h1>
+    <h3>Créer un lieu</h3>
+    <div>
+      <br>Nom du lieu:
+      <input type="text" id="name_create" name="name" required><br>
+      <br>Adresse:
+      <input type="text" id="adress_create" name="adress" required>
+      <br>Code postal:
+      <input type="number" id="postal_create" name="code_postal" required>
+      <br>Ville:
+      <input type="text" id="city_create" name="ville" required>
+      <br>
+      <select id="id_category" >
+        <option required>---- SELECTIONNEZ ----</option>
+      </select>
+    </div>
+    <button type="submit" id='submit_create' value="Submit">Submit</button>
+    <div id="carte"></div>
+  </div>
+</body>
+
+</html>
+<script>
+  $(document).ready(function() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+
+        // Les variables importantes
+        var apikey = "5d00e249171228470d8e265d6259735bfebcd18efd9f463bfe72cab07d7221da";
+        var latitude = position.coords.latitude;
+        var longitude = position.coords.longitude;
+
+        // AFFICHAGE DE LA CARTE
+        var map = L.map('carte').setView([latitude, longitude], 15);
+        var osmUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        var osmAttrib = 'Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors';
+        var france = new L.TileLayer(osmUrl, {
+          minZoom: 2,
+          maxZoom: 15,
+          attribution: osmAttrib
+        });
+        var user = L.marker([latitude, longitude]).addTo(map);
+        map.addLayer(france);
+
+        // AFFICHAGE DES CATEGORIES
+
+        var category = $.ajax({
+          "async": true,
+          "crossDomain": true,
+          "url": "https://api.cours-webservice.arrobe.fr/v2/category",
+          "method": "GET",
+          "headers": {
+            'apikey': apikey,
+          },
+          success: function(data) {
+            data.category.forEach(function(value) {
+              // AFFICHAGE DES HOPITAUX
+              var all_places = $.ajax({
+                "async": true,
+                "crossDomain": true,
+                "url": "https://api.cours-webservice.arrobe.fr/v2/places/category/"+value.id,
+                "method": "GET",
+                "headers": {
+                  'apikey': apikey,
+                },
+                success: function(data) {
+                  data.place.forEach(function(places) {
+                  var flag = Distance(latitude, longitude, places.latitude, places.longitude);
+                  if(flag < 10000){
+                    var marker = L.marker([places.latitude, places.longitude]).addTo(map);
+                    marker.bindPopup("<b>" + places.name +", situé " + places.address + "</b><br>"+ places.postal_code +" "+ places.city+"<h3>Modifier ce lieu</h3> <div><br>Nom du lieu: <input type='text' id='name_create' name='name' required><br><br>Adresse:<input type='text' id='adress_create' name='adress' required><br>Code postal:<input type='number' id='postal_create' name='code_postal' required><br>Ville:<input type='text' id='city_create' name='ville' required><br><select id='id_category1' ><option required>---- SELECTIONNEZ ----</option></select></div><button type='submit' id='submit_modif' value='Submit'>Submit</button>").openPopup();
+                  }
+              });
+                },
+                dataType: "json"
+              });
+              var input = document.createElement("option");
+              var title = document.createTextNode(value.name);
+              input.setAttribute("value", value.id);
+              input.appendChild(title);
+              document.getElementById("id_category").appendChild(input);
+
+            });
+          },
+          error: function(jqXHR, textStatus, errorThrown) {
+            alert("Il y à un soucis quelque part !");
+            console.log('jqXHR:');
+            console.log(jqXHR);
+            console.log('textStatus:');
+            console.log(textStatus);
+            console.log('errorThrown:');
+            console.log(errorThrown);
+          },
+          dataType: "json"
+        });
+
+        $("#submit_create").click(function() {
+          // Récupération de tous les éléments
+          var name_create = document.getElementById('name_create').value;
+          var adress_create = document.getElementById('adress_create').value;
+          var postal_create = document.getElementById('postal_create').value;
+          var city_create = document.getElementById('city_create').value;
+          var id_category = document.getElementById('id_category').value;
+
+          // Ajout dans le JSON du time
+          var data = {
+            "category_id": id_category,
+            "name": name_create,
+            "address": adress_create,
+            "postal_code": postal_create,
+            "city": city_create
+          };
+          data = JSON.stringify(data);
+
+          // Envoi du nouveau lieu
+          var post = $.ajax({
+            "async": true,
+            "crossDomain": true,
+            "url": "https://api.cours-webservice.arrobe.fr/v2/places",
+            "method": "POST",
+            "headers": {
+                'apikey': apikey,
+            },
+            success: function(data) {
+              alert("votre ajout à bien été pris en compte !");
+              console.log(data);
+              var newOne = L.marker([data.latitude, data.longitude], {icon: Newplace}).addTo(map);
+              newOne.bindPopup("<b>" + data.name +", situé au " + data.address + "</b><br>"+ data.postal_code + data.city).openPopup();
+              console.log(popup);
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+              alert("Il y à un soucis quelque part !");
+              console.log('jqXHR:');
+              console.log(jqXHR);
+              console.log('textStatus:');
+              console.log(textStatus);
+              console.log('errorThrown:');
+              console.log(errorThrown);
+            },
+            data: data,
+            dataType: "json"
+          });
+        });
+
+        // Converti le gradiant en distance
+        function convertRad(input) {
+          return (Math.PI * input) / 180;
+        }
+
+        // distance latitude longitude
+        function Distance(lat_a_degre, lon_a_degre, lat_b_degre, lon_b_degre) {
+          R = 6378000 // Earth radius
+          lat_a = convertRad(lat_a_degre);
+          lon_a = convertRad(lon_a_degre);
+          lat_b = convertRad(lat_b_degre);
+          lon_b = convertRad(lon_b_degre);
+          d = R * (Math.PI / 2 - Math.asin(Math.sin(lat_b) * Math.sin(lat_a) + Math.cos(lon_b - lon_a) * Math.cos(lat_b) * Math.cos(lat_a)))
+          return d;
+        }
+      });
+    } else
+      alert("Vous êtes sous IE ou quoi");
+  });
+
+// DU JOLI
+  var Newplace = L.icon({
+      iconUrl: 'newPlace.png',
+
+      iconSize:     [38, 95], // size of the icon
+      iconAnchor:   [22, 94], // point of the icon which will correspond to marker's location
+      shadowAnchor: [4, 62],  // the same for the shadow
+      popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
+  });
+</script>
