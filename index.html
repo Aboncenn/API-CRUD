@@ -88,7 +88,7 @@
                   var flag = Distance(latitude, longitude, places.latitude, places.longitude);
                   if(flag < 10000){
                     var marker = L.marker([places.latitude, places.longitude]).addTo(map);
-                    marker.bindPopup("<b>" + places.name +", situé " + places.address + "</b><br>"+ places.postal_code +" "+ places.city+"<h3>Modifier ce lieu</h3> <div><br>Nom du lieu: <input type='text' id='name_create' name='name' required><br><br>Adresse:<input type='text' id='adress_create' name='adress' required><br>Code postal:<input type='number' id='postal_create' name='code_postal' required><br>Ville:<input type='text' id='city_create' name='ville' required><br><select id='id_category1' ><option required>---- SELECTIONNEZ ----</option></select></div><button type='submit' id='submit_modif' value='Submit'>Submit</button>").openPopup();
+                    marker.bindPopup("<b>" + places.name +", situé " + places.address + "</b><br>"+ places.postal_code +" "+ places.city+"<h3>Modifier ce lieu</h3> <div><br>Nom du lieu: <input type='text' id='name_update' name='name' required><br><br>Adresse:<input type='text' id='adress_update' name='adress' required><br>Code postal:<input type='number' id='postal_update' name='code_postal' required><br>Ville:<input type='text' id='city_update' name='ville' required><br><select id='id_category1' ><option required>---- SELECTIONNEZ ----</option><option id='id_category' value ="+value.id + "required>"+ value.name +"</option></select></div><button type='submit' id='submit_update' value='Submit'>Submit</button>").openPopup();
                   }
               });
                 },
@@ -122,7 +122,7 @@
           var city_create = document.getElementById('city_create').value;
           var id_category = document.getElementById('id_category').value;
 
-          // Ajout dans le JSON du time
+          // Création du fichier d'ajout d'élément
           var data = {
             "category_id": id_category,
             "name": name_create,
@@ -162,6 +162,53 @@
           });
         });
 
+        $("#submit_update").click(function() {
+          // Récupération de tous les éléments
+          var name_update = document.getElementById('name_create').value;
+          var adress_update = document.getElementById('adress_create').value;
+          var postal_update = document.getElementById('postal_create').value;
+          var city_update = document.getElementById('city_create').value;
+          var id_category = document.getElementById('id_category').value;
+
+          // Création du fichier d'ajout d'élément
+          var data = {
+            "category_id": id_category,
+            "name": name_update,
+            "address": adress_update,
+            "postal_code": postal_update,
+            "city": city_update
+          };
+          data = JSON.stringify(data);
+
+          // Envoi du nouveau lieu
+          var post = $.ajax({
+            "async": true,
+            "crossDomain": true,
+            "url": "https://api.cours-webservice.arrobe.fr/v2/places",
+            "method": "POST",
+            "headers": {
+                'apikey': apikey,
+            },
+            success: function(data) {
+              alert("votre ajout à bien été pris en compte !");
+              console.log(data);
+              var newOne = L.marker([data.latitude, data.longitude], {icon: Newplace}).addTo(map);
+              newOne.bindPopup("<b>" + data.name +", situé au " + data.address + "</b><br>"+ data.postal_code + data.city).openPopup();
+              console.log(popup);
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+              alert("Il y à un soucis quelque part !");
+              console.log('jqXHR:');
+              console.log(jqXHR);
+              console.log('textStatus:');
+              console.log(textStatus);
+              console.log('errorThrown:');
+              console.log(errorThrown);
+            },
+            data: data,
+            dataType: "json"
+          });
+        });
         // Converti le gradiant en distance
         function convertRad(input) {
           return (Math.PI * input) / 180;
