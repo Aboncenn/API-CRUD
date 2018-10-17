@@ -46,7 +46,7 @@
       navigator.geolocation.getCurrentPosition(function(position) {
 
         // Les variables importantes
-        var apikey = ""; // key API
+        var apikey = "5d00e249171228470d8e265d6259735bfebcd18efd9f463bfe72cab07d7221da"; // key API
         var latitude = position.coords.latitude;
         var longitude = position.coords.longitude;
 
@@ -88,7 +88,16 @@
                   var flag = Distance(latitude, longitude, places.latitude, places.longitude);
                   if(flag < 10000){
                     var marker = L.marker([places.latitude, places.longitude]).addTo(map);
-                    marker.bindPopup("<b>" + places.name +", situé " + places.address + "</b><br>"+ places.postal_code +" "+ places.city+"<h3>Modifier ce lieu</h3> <div><br>Nom du lieu: <input type='text' id='name_update' name='name' required><br><br>Adresse:<input type='text' id='adress_update' name='adress' required><br>Code postal:<input type='number' id='postal_update' name='code_postal' required><br>Ville:<input type='text' id='city_update' name='ville' required><br><select id='id_category1' ><option required>---- SELECTIONNEZ ----</option><option id='id_category' value ="+value.id + "required>"+ value.name +"</option></select></div><button type='submit' id='submit_update' value='Submit'>Submit</button>").openPopup();
+                    var content = "<b>" + places.name +", situé " + places.address + "</b><br>"+ places.postal_code +" "+ places.city+
+                                  "<h3>Modifier ce lieu</h3>"+
+                                  "<br />Nom du lieu :<input type='text' id='name_update' name='name' required>"+
+                                  "<br />Adresse:<input type='text' id='adress_update' name='adress' required>"+
+                                  "<br />Ville:<input type='text' id='city_update' name='ville' required>"+
+                                  "<br />Code postal:<input type='number' id='postal_update' name='code_postal' required>"+
+                                  "<br />Ville:<input type='text' id='city_update' name='ville' required>"+
+                                  "<br /><select id='id_category' ><option required>---- SELECTIONNEZ ----</option></select>"+
+                                  "<br /><button type='submit' id='submit_update' value='Submit'>Submit</button>";
+                    var helloPopup = marker.bindPopup(content).openPopup();
                   }
               });
                 },
@@ -99,7 +108,7 @@
               input.setAttribute("value", value.id);
               input.appendChild(title);
               document.getElementById("id_category").appendChild(input);
-
+              
             });
           },
           error: function(jqXHR, textStatus, errorThrown) {
