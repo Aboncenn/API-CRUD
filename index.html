@@ -46,7 +46,7 @@
       navigator.geolocation.getCurrentPosition(function(position) {
 
         // Les variables importantes
-        var apikey = "5d00e249171228470d8e265d6259735bfebcd18efd9f463bfe72cab07d7221da"; // key API
+        var apikey = ""; // key API
         var latitude = position.coords.latitude;
         var longitude = position.coords.longitude;
 
@@ -79,7 +79,6 @@
               input.setAttribute("value", value.id);
               input.appendChild(title);
               document.getElementById("id_category").appendChild(input);
-
             });
           },
           error: function(jqXHR, textStatus, errorThrown) {
@@ -134,13 +133,7 @@
           dataType: "json",
         });
 
-
-
-        /*
-        $("div").on("click", '.open_button', function () {
-          console.log('coucou');
-                  });
-                  */
+        // Fonction création des éléments
         $("#submit_create").click(function() {
           // Récupération de tous les éléments
           var name_create = document.getElementById('name_create').value;
@@ -204,7 +197,7 @@
           	"name": name_update,
           	"address": adress_update,
           	"postal_code": postal_update,
-          	"city": city_update
+            "city": city_update
           };
             data = JSON.stringify(data);
           // Ajax Update
