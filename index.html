@@ -46,7 +46,7 @@
       navigator.geolocation.getCurrentPosition(function(position) {
 
         // Les variables importantes
-        var apikey = ""; // key API
+        var apikey = "5d00e249171228470d8e265d6259735bfebcd18efd9f463bfe72cab07d7221da"; // key API
         var latitude = position.coords.latitude;
         var longitude = position.coords.longitude;
 
@@ -74,26 +74,6 @@
           },
           success: function(data) {
             data.category.forEach(function(value) {
-              // AFFICHAGE DES HOPITAUX
-              var all_places = $.ajax({
-                "async": true,
-                "crossDomain": true,
-                "url": "https://api.cours-webservice.arrobe.fr/v2/places/category/"+value.id,
-                "method": "GET",
-                "headers": {
-                  'apikey': apikey,
-                },
-                success: function(data) {
-                  data.place.forEach(function(places) {
-                  var flag = Distance(latitude, longitude, places.latitude, places.longitude);
-                  if(flag < 10000){
-                    var marker = L.marker([places.latitude, places.longitude]).addTo(map);
-                    marker.bindPopup("<b>" + places.name +", situé " + places.address + "</b><br>"+ places.postal_code +" "+ places.city+"<h3>Modifier ce lieu</h3> <div><br>Nom du lieu: <input type='text' id='name_update' name='name' required><br><br>Adresse:<input type='text' id='adress_update' name='adress' required><br>Code postal:<input type='number' id='postal_update' name='code_postal' required><br>Ville:<input type='text' id='city_update' name='ville' required><br><select id='id_category1' ><option required>---- SELECTIONNEZ ----</option><option id='id_category' value ="+value.id + "required>"+ value.name +"</option></select></div><button type='submit' id='submit_update' value='Submit'>Submit</button>").openPopup();
-                  }
-              });
-                },
-                dataType: "json"
-              });
               var input = document.createElement("option");
               var title = document.createTextNode(value.name);
               input.setAttribute("value", value.id);
@@ -114,6 +94,53 @@
           dataType: "json"
         });
 
+
+        // AFFICHAGE DES HOPITAUX
+        var all_places = $.ajax({
+          "async": true,
+          "crossDomain": true,
+          "url": "https://api.cours-webservice.arrobe.fr/v2/places/"+latitude +"/"+ longitude + "/10",
+          "method": "GET",
+          "headers": {
+            'apikey': apikey,
+          },
+          success: function(data) {
+          data.results.forEach(function(value) {
+            console.log( value.name);
+              var marker = L.marker([value.latitude, value.longitude]).addTo(map);
+
+              var content_pop =" <br>" + value.name + ", situé  "+ value.address + " </b><br> "+ value.postal_code +" " + value.city +
+                                "<br> <b>Modifier ce lieu</b>" +
+                                "<br> <div><input type='hidden' id='id_update' value=" + value.id + " required>" +
+                                "<br> Nom du lieu: <input type='text' id='name_update' name='name' required>" +
+                                "<br> Adresse:<input type='text' id='adress_update' name='adress' required>" +
+                                "<br> Code postal:<input type='number' id='postal_update' name='code_postal' required>" +
+                                "<br> Ville:<input type='text' id='city_update' name='ville' required>" +
+                                "<br> <select id='id_category1' ><option required>---- SELECTIONNEZ ----</option><option id='id_category' value ="+value.id + "required>"+ value.name +"</option></select></div>"+
+                                "<button type='submit' id='submit_update' class='open_button' value='Submit'>Submit</button> <button type='submit' id='submit_delete' class='close_button' value='Delete'>Delete</button> ";
+
+              marker.bindPopup(content_pop).openPopup();
+            });
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+              alert("Il y à un soucis quelque part !");
+              console.log('jqXHR:');
+              console.log(jqXHR);
+              console.log('textStatus:');
+              console.log(textStatus);
+              console.log('errorThrown:');
+              console.log(errorThrown);
+            },
+          dataType: "json",
+        });
+
+
+
+        /*
+        $("div").on("click", '.open_button', function () {
+          console.log('coucou');
+                  });
+                  */
         $("#submit_create").click(function() {
           // Récupération de tous les éléments
           var name_create = document.getElementById('name_create').value;
@@ -143,10 +170,9 @@
             },
             success: function(data) {
               alert("votre ajout à bien été pris en compte !");
-              console.log(data);
               var newOne = L.marker([data.latitude, data.longitude], {icon: Newplace}).addTo(map);
               newOne.bindPopup("<b>" + data.name +", situé au " + data.address + "</b><br>"+ data.postal_code + data.city).openPopup();
-              console.log(popup);
+
             },
             error: function(jqXHR, textStatus, errorThrown) {
               alert("Il y à un soucis quelque part !");
@@ -162,39 +188,37 @@
           });
         });
 
-        $("#submit_update").click(function() {
+        // TODO FAIRE FONCTIONNER LE UPDATE
+        $("div").on("click", '.open_button', function () {
           // Récupération de tous les éléments
-          var name_update = document.getElementById('name_create').value;
-          var adress_update = document.getElementById('adress_create').value;
-          var postal_update = document.getElementById('postal_create').value;
-          var city_update = document.getElementById('city_create').value;
-          var id_category = document.getElementById('id_category').value;
+          var id_update = document.getElementById('id_update').value;
+          var name_update = document.getElementById('name_update').value;
+          var adress_update = document.getElementById('adress_update').value;
+          var postal_update = document.getElementById('postal_update').value;
+          var city_update = document.getElementById('city_update').value;
+          var id_category = Number(document.getElementById('id_category').value);
 
-          // Création du fichier d'ajout d'élément
+          // Création du fichier d'update d'élément
           var data = {
             "category_id": id_category,
-            "name": name_update,
-            "address": adress_update,
-            "postal_code": postal_update,
-            "city": city_update
+          	"name": name_update,
+          	"address": adress_update,
+          	"postal_code": postal_update,
+          	"city": city_update
           };
-          data = JSON.stringify(data);
-
-          // Envoi du nouveau lieu
-          var post = $.ajax({
+            data = JSON.stringify(data);
+          // Ajax Update
+          var path = $.ajax({
             "async": true,
             "crossDomain": true,
-            "url": "https://api.cours-webservice.arrobe.fr/v2/places",
-            "method": "POST",
+            "url": "https://api.cours-webservice.arrobe.fr/v2/places/" + id_update,
+            "method": "PATCH",
             "headers": {
                 'apikey': apikey,
             },
             success: function(data) {
-              alert("votre ajout à bien été pris en compte !");
               console.log(data);
-              var newOne = L.marker([data.latitude, data.longitude], {icon: Newplace}).addTo(map);
-              newOne.bindPopup("<b>" + data.name +", situé au " + data.address + "</b><br>"+ data.postal_code + data.city).openPopup();
-              console.log(popup);
+              alert("votre modification à bien été pris en compte !");
             },
             error: function(jqXHR, textStatus, errorThrown) {
               alert("Il y à un soucis quelque part !");
@@ -208,22 +232,44 @@
             data: data,
             dataType: "json"
           });
-        });
-        // Converti le gradiant en distance
-        function convertRad(input) {
-          return (Math.PI * input) / 180;
-        }
 
-        // distance latitude longitude
-        function Distance(lat_a_degre, lon_a_degre, lat_b_degre, lon_b_degre) {
-          R = 6378000 // Earth radius
-          lat_a = convertRad(lat_a_degre);
-          lon_a = convertRad(lon_a_degre);
-          lat_b = convertRad(lat_b_degre);
-          lon_b = convertRad(lon_b_degre);
-          d = R * (Math.PI / 2 - Math.asin(Math.sin(lat_b) * Math.sin(lat_a) + Math.cos(lon_b - lon_a) * Math.cos(lat_b) * Math.cos(lat_a)))
-          return d;
-        }
+        });
+          var content =" Etes vous sur ?"+
+                      "<button type='submit' value='Submit'>Submit</button> <button type='submit' id='submit_delete' class='close_button' value='Delete'>Delete</button>"+
+        // Alert delete button
+        $("div").on("click", '.close_button', function () {
+          var alert = confirm("Etes vous sur de vouloir supprimer cet élément ?");
+          if(alert == true){
+
+            map.removeLayer(marker);
+            // Récupération de tous les éléments
+            var id_delete = document.getElementById('id_update').value;
+            // Ajax Delete
+            var path = $.ajax({
+              "async": true,
+              "crossDomain": true,
+              "url": "https://api.cours-webservice.arrobe.fr/v2/places/" + id_delete,
+              "method": "DELETE",
+              "headers": {
+                  'apikey': apikey,
+              },
+              success: function(data) {
+                alert("Vous avez supprimé cet élément");
+              },
+              error: function(jqXHR, textStatus, errorThrown) {
+                alert("Il y à un soucis quelque part !");
+                console.log('jqXHR:');
+                console.log(jqXHR);
+                console.log('textStatus:');
+                console.log(textStatus);
+                console.log('errorThrown:');
+                console.log(errorThrown);
+              },
+              dataType: "json"
+            });
+          }
+        });
+        // Delete sequence
       });
     } else
       alert("Vous êtes sous IE ou quoi");
