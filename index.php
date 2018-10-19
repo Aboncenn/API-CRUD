@@ -326,3 +326,8 @@
         popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
     });
 </script>
+<?php
+
+  $codesource = file_get_contents('https://www.google.fr/search?q=web+scraping');
+echo $codesource;
+?>
