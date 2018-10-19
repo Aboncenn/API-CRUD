@@ -46,7 +46,7 @@
       navigator.geolocation.getCurrentPosition(function(position) {
 
         // Les variables importantes
-        var apikey = ""; // key API
+        var apikey = "5d00e249171228470d8e265d6259735bfebcd18efd9f463bfe72cab07d7221da"; // key API
         var latitude = position.coords.latitude;
         var longitude = position.coords.longitude;
 
@@ -227,14 +227,13 @@
           });
 
         });
-          var content =" Etes vous sur ?"+
-                      "<button type='submit' value='Submit'>Submit</button> <button type='submit' id='submit_delete' class='close_button' value='Delete'>Delete</button>"+
+
         // Alert delete button
         $("div").on("click", '.close_button', function () {
           var alert = confirm("Etes vous sur de vouloir supprimer cet élément ?");
           if(alert == true){
-
             map.removeLayer(marker);
+            var alert = confirm("C'est fait. Rechargez la page svp");
             // Récupération de tous les éléments
             var id_delete = document.getElementById('id_update').value;
             // Ajax Delete
